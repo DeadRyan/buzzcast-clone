@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { MongoClient } = require('mongodb');
+const bcrypt = require('bcrypt');
 const app = express();
 const port = 3000;
 
@@ -13,7 +14,7 @@ async function connectDB() {
   try {
     const client = new MongoClient(uri, {
       tls: true,
-      tlsAllowInvalidCertificates: false // Remove minTLSVersion for now
+      tlsAllowInvalidCertificates: false
     });
     await client.connect();
     db = client.db('buzzcast');
@@ -45,8 +46,12 @@ app.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Username already taken' });
     }
 
-    // Insert new user
-    await users.insertOne({ username, password }); // Plaintext for now
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Insert new user with hashed password
+    await users.insertOne({ username, password: hashedPassword });
     res.status(201).json({ message: 'User registered successfully' });
   } catch (err) {
     console.error('Registration error:', err);
