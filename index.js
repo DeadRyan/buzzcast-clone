@@ -5,7 +5,7 @@ const bcrypt = require('bcrypt');
 const app = express();
 const port = 3000;
 
-app.use(express.json()); // Parse JSON bodies
+app.use(express.json());
 
 const uri = process.env.MONGODB_URI;
 let db;
@@ -34,6 +34,17 @@ app.post('/register', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Username and password are required' });
+  }
+
+  // Validation
+  if (username.length < 3 || username.length > 20) {
+    return res.status(400).json({ error: 'Username must be 3-20 characters' });
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    return res.status(400).json({ error: 'Username can only contain letters, numbers, and underscores' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
   try {
